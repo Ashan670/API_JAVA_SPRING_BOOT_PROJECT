@@ -16,7 +16,7 @@ public class ApiController {
         this.apiService = apiService;
     }
 
-    @PostMapping("/apis/{endpoint}")
+    @PostMapping("/api/{endpoint}")
     public String getResponse(@PathVariable("endpoint") String endpoint, @RequestBody Map<String, Object> requestBody) {
         return apiService.getResponse(endpoint, requestBody);
     }

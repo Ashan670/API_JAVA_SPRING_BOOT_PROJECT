@@ -26,13 +26,19 @@ public class StudentController {
     @PostMapping("/students/getByEndpoint")
     public List<Student> getStudentsByEndpoint(@RequestBody EndpointRequest request) {
         String endpoint = request.getEndpoint();
-        return studentService.getStudentsByEndpoint(endpoint);
+        return studentService.getStudentsByEndpoint(endpoint,endpoint);
     }
     
-    @GetMapping("/api/{endpoint}")
-    public List<Student> getStudentsByEndpoint(@PathVariable("endpoint") String endpoint) {
+    @PostMapping("/api1/{endpoint}")
+    public List<Student> getStudentsByEndpoint(@PathVariable("endpoint") String endpoint, @RequestBody EndpointRequest request) {
         String dynamicEndpoint = "/api/" + endpoint;
-        return studentService.getStudentsByEndpoint(dynamicEndpoint);
+
+        String requestEndpoint = request.getEndpoint();
+
+        return studentService.getStudentsByEndpoint(dynamicEndpoint, requestEndpoint);
     }
+
+
+
 
 }

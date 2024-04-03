@@ -33,13 +33,14 @@ public class StudentService {
     }
 
     @ResponseBody
-    public List<Student> getStudentsByEndpoint(String endpoint) {
+    public List<Student> getStudentsByEndpoint(String endpoint, String id) {
         List<Student> students = new ArrayList<>();
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(
-                     "SELECT * FROM student_table WHERE endpoint_id = (SELECT id FROM endpoint_table WHERE endpoint = ?)")
+                     "SELECT * FROM student_table WHERE endpoint_id = (SELECT id FROM endpoint_table WHERE endpoint = ?) AND id  = ?")
         ) {
             statement.setString(1, endpoint);
+            statement.setString(2, id);
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     Student student = mapResultSetToStudent(resultSet);
@@ -51,6 +52,7 @@ public class StudentService {
         }
         return students;
     }
+
 
     private Student mapResultSetToStudent(ResultSet resultSet) throws SQLException {
         Student student = new Student();

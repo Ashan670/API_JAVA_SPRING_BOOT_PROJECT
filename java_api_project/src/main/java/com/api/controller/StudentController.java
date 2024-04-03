@@ -3,19 +3,14 @@ package com.api.controller;
 import java.util.List;
 
 import com.api.model.Student;
+import com.api.model.EndpointRequest;
 import com.api.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/students")
 public class StudentController {
-    
+
     private final StudentService studentService;
 
     @Autowired
@@ -23,14 +18,21 @@ public class StudentController {
         this.studentService = studentService;
     }
 
-    @GetMapping
+    @GetMapping("/students")
     public List<Student> getAllStudents() {
         return studentService.getAllStudents();
     }
 
-  
-    @PostMapping("/getByEndpoint")
-    public List<Student> getStudentDataByEndpoint(@RequestBody String endpoint) {
+    @PostMapping("/students/getByEndpoint")
+    public List<Student> getStudentsByEndpoint(@RequestBody EndpointRequest request) {
+        String endpoint = request.getEndpoint();
         return studentService.getStudentsByEndpoint(endpoint);
     }
+    
+    @GetMapping("/api/{endpoint}")
+    public List<Student> getStudentsByEndpoint(@PathVariable("endpoint") String endpoint) {
+        String dynamicEndpoint = "/api/" + endpoint;
+        return studentService.getStudentsByEndpoint(dynamicEndpoint);
+    }
+
 }

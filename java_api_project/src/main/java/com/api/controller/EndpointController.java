@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,6 +45,16 @@ public class EndpointController {
         boolean updated = endpointService.updateEndpoint(id, endpoint);
         if (updated) {
             return ResponseEntity.status(HttpStatus.OK).body("Endpoint updated successfully");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Endpoint not found");
+        }
+    }
+    
+    @DeleteMapping("/deleteEndpoint/{id}")
+    public ResponseEntity<String> deleteEndpoint(@PathVariable("id") int id) {
+        boolean deleted = endpointService.deleteEndpoint(id);
+        if (deleted) {
+            return ResponseEntity.status(HttpStatus.OK).body("Endpoint deleted successfully");
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Endpoint not found");
         }

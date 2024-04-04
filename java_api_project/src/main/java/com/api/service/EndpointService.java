@@ -14,23 +14,24 @@ import java.util.List;
 @Service
 public class EndpointService {
 
-    public List<Endpoint> getAllEndpoints() {
-        List<Endpoint> endpoints = new ArrayList<>();
-        try {
-            Connection connection = DatabaseConnection.getConnection();
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM endpoint_table");
-            while (resultSet.next()) {
-                Endpoint endpoint = new Endpoint();
-                endpoint.setId(resultSet.getInt("id"));
-                endpoint.setEndpoint(resultSet.getString("endpoint"));
-                endpoints.add(endpoint);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return endpoints;
-    }
+	public List<Endpoint> getAllEndpoints() {
+	    List<Endpoint> endpoints = new ArrayList<>();
+	    try {
+	        Connection connection = DatabaseConnection.getConnection();
+	        Statement statement = connection.createStatement();
+	        ResultSet resultSet = statement.executeQuery("SELECT * FROM endpoint_table");
+	        while (resultSet.next()) {
+	            Endpoint endpoint = new Endpoint();
+	            endpoint.setId(resultSet.getInt("id"));
+	            endpoint.setEndpoint(resultSet.getString("endpoint"));
+	            endpoints.add(endpoint);
+	        }
+	        connection.close();
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    return endpoints;
+	}
     
     public void addEndpoint(Endpoint endpoint) {
         try {
@@ -51,6 +52,25 @@ public class EndpointService {
             statement.setInt(2, id);
             int rowsUpdated = statement.executeUpdate();
             return rowsUpdated > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    public boolean deleteEndpoint(int id) {
+        try {
+            Connection connection = DatabaseConnection.getConnection();
+            PreparedStatement deleteResponseStatement = connection.prepareStatement("DELETE FROM response_table WHERE endpoint_id = ?");
+            deleteResponseStatement.setInt(1, id);
+            deleteResponseStatement.executeUpdate();
+            
+            PreparedStatement deleteEndpointStatement = connection.prepareStatement("DELETE FROM endpoint_table WHERE id = ?");
+            deleteEndpointStatement.setInt(1, id);
+            int rowsDeleted = deleteEndpointStatement.executeUpdate();
+            connection.close();
+            
+            return rowsDeleted > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;

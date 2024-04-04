@@ -14,16 +14,5 @@ public class DatabaseConnection {
     }
 }
 
-/*
 
-//add endpoin (record insert) 
-// 
-//add response(insert request respons)
-//edit endpoint (edit)
-//elete (ok)
-//request respons 
-  
- 
- */
- 
  

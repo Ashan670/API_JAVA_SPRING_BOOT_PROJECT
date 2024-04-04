@@ -10,117 +10,197 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
 public class ApiService {
 
-    public String getResponse(String endpoint, Map<String, Object> requestBody) {
-        try {
-            Connection connection = DatabaseConnection.getConnection();
+	public String getAllResponseData() {
+		try {
+			Connection connection = DatabaseConnection.getConnection();
+			String sql = "SELECT * FROM response_table";
+			PreparedStatement statement = connection.prepareStatement(sql);
+			ResultSet resultSet = statement.executeQuery();
 
-             int endpointId = getEndpointId(connection, Integer.parseInt(endpoint));
-            if (endpointId == -1) {
-                connection.close();
-                return "{\"error\": \"Endpoint does not exist in the database\"}";
-            }
+			List<Map<String, Object>> responseDataList = new ArrayList<>();
 
-             if (!isValidJson(requestBody)) {
-                connection.close();
-                return "{\"error\": \"Invalid request JSON format\"}";
-            }
+			while (resultSet.next()) {
+				Map<String, Object> responseData = new HashMap<>();
+				responseData.put("id", resultSet.getInt("id"));
+				responseData.put("request", new ObjectMapper().readValue(resultSet.getString("request"), Map.class));
+				responseData.put("response", new ObjectMapper().readValue(resultSet.getString("response"), Map.class));
+				responseData.put("endpoint_id", resultSet.getInt("endpoint_id"));
+				responseDataList.add(responseData);
+			}
 
-             String sql = "SELECT response FROM response_table WHERE endpoint_id = ? ";
-            StringBuilder whereClause = new StringBuilder();
-            for (String key : requestBody.keySet()) {
-                whereClause.append("AND request->>'$.").append(key).append("' = ? ");
-            }
-            sql += whereClause.toString();
+			resultSet.close();
+			statement.close();
+			connection.close();
 
-             PreparedStatement statement = connection.prepareStatement(sql);
-            statement.setInt(1, endpointId);
-            int index = 2;
-            for (Object value : requestBody.values()) {
-                statement.setObject(index++, value);
-            }
+			ObjectMapper objectMapper = new ObjectMapper();
+			return objectMapper.writeValueAsString(responseDataList);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "{\"error\": \"Error occurred while fetching response data!\"}";
+		}
+	}
 
-            ResultSet resultSet = statement.executeQuery();
+	public String getResponse(String endpoint, Map<String, Object> requestBody) {
+		try {
+			Connection connection = DatabaseConnection.getConnection();
 
-             if (resultSet.next()) {
-                String responseData = resultSet.getString("response");
-                resultSet.close();
-                statement.close();
-                connection.close();
-                return responseData;
-            } else {
-                resultSet.close();
-                statement.close();
-                connection.close();
-                return "{\"error\": \"No response found for the given endpoint and request data\"}";
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "{\"error\": \"Error occurred!\"}";
-        }
-    }
+			if (!isValidJson(requestBody)) {
+				connection.close();
+				return "{\"error\": \"Invalid request JSON format\"}";
+			}
 
-    private int getEndpointId(Connection connection, int endpointId) throws SQLException {
-        String sql = "SELECT id FROM endpoint_table WHERE id = ?";
-        PreparedStatement statement = connection.prepareStatement(sql);
-        statement.setInt(1, endpointId);
-        ResultSet resultSet = statement.executeQuery();
-        if (resultSet.next()) {
-            int id = resultSet.getInt("id");
-            resultSet.close();
-            statement.close();
-            return id;
-        } else {
-            resultSet.close();
-            statement.close();
-            return -1;
-        }
-    }
+			StringBuilder whereClause = new StringBuilder();
+			for (String key : requestBody.keySet()) {
+				whereClause.append("AND request->>'$.").append(key).append("' = ? ");
+			}
 
+			String sql = "SELECT response FROM response_table WHERE endpoint_id = (SELECT id FROM endpoint_table WHERE endpoint = ?) "
+					+ whereClause.toString();
 
-    private boolean isValidJson(Map<String, Object> jsonMap) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            objectMapper.writeValueAsString(jsonMap);
-            return true;
-        } catch (JsonProcessingException e) {
-            return false;
-        }
-    }
+			PreparedStatement statement = connection.prepareStatement(sql);
+			statement.setString(1, endpoint);
+			int index = 2;
+			for (Object value : requestBody.values()) {
+				statement.setObject(index++, value);
+			}
 
-    public void insertResponse(int id, Map<String, Object> request, Map<String, Object> response,  int endpointId) throws SQLException {
-        Connection connection = null;
-        PreparedStatement statement = null;
-        try {
-            connection = DatabaseConnection.getConnection();
+			ResultSet resultSet = statement.executeQuery();
 
-            if (getEndpointId(connection, endpointId) == -1) {
-                throw new IllegalArgumentException("Endpoint does not exist in the database");
-            }
+			if (resultSet.next()) {
+				String responseData = resultSet.getString("response");
+				resultSet.close();
+				statement.close();
+				connection.close();
+				return responseData;
+			} else {
+				resultSet.close();
+				statement.close();
+				connection.close();
+				return "{\"error\": \"No response found for the given endpoint and request data\"}";
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "{\"error\": \"Error occurred!\"}";
+		}
+	}
 
-             String sql = "INSERT INTO response_table (id, request, response, endpoint_id) VALUES (?, ?, ?, ?)";
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, id);
-            statement.setObject(2, new ObjectMapper().writeValueAsString(request));
-            statement.setObject(3, new ObjectMapper().writeValueAsString(response));
-            statement.setInt(4, endpointId);
-            statement.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new SQLException("Error occurred during response insertion: " + e.getMessage());
-        } finally {
-            if (statement != null) {
-                statement.close();
-            }
-            if (connection != null) {
-                connection.close();
-            }
-        }
-    }
+	private int getEndpointId(Connection connection, int endpointId) throws SQLException {
+		String sql = "SELECT id FROM endpoint_table WHERE id = ?";
+		PreparedStatement statement = connection.prepareStatement(sql);
+		statement.setInt(1, endpointId);
+		ResultSet resultSet = statement.executeQuery();
+		if (resultSet.next()) {
+			int id = resultSet.getInt("id");
+			resultSet.close();
+			statement.close();
+			return id;
+		} else {
+			resultSet.close();
+			statement.close();
+			return -1;
+		}
+	}
 
+	private boolean isValidJson(Map<String, Object> jsonMap) {
+		ObjectMapper objectMapper = new ObjectMapper();
+		try {
+			objectMapper.writeValueAsString(jsonMap);
+			return true;
+		} catch (JsonProcessingException e) {
+			return false;
+		}
+	}
+
+	public void insertResponse(int id, Map<String, Object> request, Map<String, Object> response, int endpointId)
+			throws SQLException {
+		Connection connection = null;
+		PreparedStatement statement = null;
+		try {
+			connection = DatabaseConnection.getConnection();
+
+			if (getEndpointId(connection, endpointId) == -1) {
+				throw new IllegalArgumentException("Endpoint does not exist in the database");
+			}
+
+			String sql = "INSERT INTO response_table (id, request, response, endpoint_id) VALUES (?, ?, ?, ?)";
+			statement = connection.prepareStatement(sql);
+			statement.setInt(1, id);
+			statement.setObject(2, new ObjectMapper().writeValueAsString(request));
+			statement.setObject(3, new ObjectMapper().writeValueAsString(response));
+			statement.setInt(4, endpointId);
+			statement.executeUpdate();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new SQLException("Error occurred during response insertion: " + e.getMessage());
+		} finally {
+			if (statement != null) {
+				statement.close();
+			}
+			if (connection != null) {
+				connection.close();
+			}
+		}
+	}
+
+	public void updateResponse(int id, Map<String, Object> request, Map<String, Object> response, int endpointId)
+			throws SQLException {
+		Connection connection = null;
+		PreparedStatement statement = null;
+		try {
+			connection = DatabaseConnection.getConnection();
+
+			if (getEndpointId(connection, endpointId) == -1) {
+				throw new IllegalArgumentException("Endpoint does not exist in the database");
+			}
+
+			String sql = "UPDATE response_table SET request = ?, response = ?, endpoint_id = ? WHERE id = ?";
+			statement = connection.prepareStatement(sql);
+			statement.setObject(1, new ObjectMapper().writeValueAsString(request));
+			statement.setObject(2, new ObjectMapper().writeValueAsString(response));
+			statement.setInt(3, endpointId);
+			statement.setInt(4, id);
+			statement.executeUpdate();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new SQLException("Error occurred during response update: " + e.getMessage());
+		} finally {
+			if (statement != null) {
+				statement.close();
+			}
+			if (connection != null) {
+				connection.close();
+			}
+		}
+	}
+
+	public void deleteResponse(int id) throws SQLException {
+		Connection connection = null;
+		PreparedStatement statement = null;
+		try {
+			connection = DatabaseConnection.getConnection();
+			String sql = "DELETE FROM response_table WHERE id = ?";
+			statement = connection.prepareStatement(sql);
+			statement.setInt(1, id);
+			statement.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new SQLException("Error occurred during response deletion: " + e.getMessage());
+		} finally {
+			if (statement != null) {
+				statement.close();
+			}
+			if (connection != null) {
+				connection.close();
+			}
+		}
+	}
 
 }

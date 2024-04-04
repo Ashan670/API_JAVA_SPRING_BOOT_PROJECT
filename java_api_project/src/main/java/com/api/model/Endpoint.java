@@ -3,14 +3,14 @@ package com.api.model;
 public class Endpoint {
 
     private int id;
-    private String endpoints;
+    private String endpoint;
 
     public Endpoint() {
     }
 
     public Endpoint(int id, String endpoint) {
         this.id = id;
-        this.endpoints = endpoint;
+        this.endpoint = endpoint;
     }
 
     public int getId() {
@@ -21,11 +21,11 @@ public class Endpoint {
         this.id = id;
     }
 
-    public String getEndpoints() {
-        return endpoints;
+    public String getEndpoint() {
+        return endpoint;
     }
 
-    public void setEndpoint(String endpoints) {
-        this.endpoints = endpoints;
+    public void setEndpoint(String endpoint) {
+        this.endpoint = endpoint;
     }
 }

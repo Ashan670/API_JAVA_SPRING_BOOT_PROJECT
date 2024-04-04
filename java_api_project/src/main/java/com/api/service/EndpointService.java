@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import com.api.model.Endpoint;
 import com.DatabaseConnection.DatabaseConnection;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -29,5 +30,30 @@ public class EndpointService {
             e.printStackTrace();
         }
         return endpoints;
+    }
+    
+    public void addEndpoint(Endpoint endpoint) {
+        try {
+            Connection connection = DatabaseConnection.getConnection();
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO endpoint_table (endpoint) VALUES (?)");
+            statement.setString(1, endpoint.getEndpoint());
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public boolean updateEndpoint(int id, Endpoint updatedEndpoint) {
+        try {
+            Connection connection = DatabaseConnection.getConnection();
+            PreparedStatement statement = connection.prepareStatement("UPDATE endpoint_table SET endpoint = ? WHERE id = ?");
+            statement.setString(1, updatedEndpoint.getEndpoint());
+            statement.setInt(2, id);
+            int rowsUpdated = statement.executeUpdate();
+            return rowsUpdated > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

@@ -13,3 +13,17 @@ public class DatabaseConnection {
         return DriverManager.getConnection(URL, USERNAME, PASSWORD);
     }
 }
+
+/*
+
+//add endpoin (record insert) 
+// 
+//add response(insert request respons)
+//edit endpoint (edit)
+//elete (ok)
+//request respons 
+  
+ 
+ */
+ 
+ 

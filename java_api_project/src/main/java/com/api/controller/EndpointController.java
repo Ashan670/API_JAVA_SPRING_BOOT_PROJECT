@@ -12,9 +12,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.api.model.Endpoint;
+import com.api.model.UpdateEndpointStatusRequest;
 import com.api.service.EndpointService;
 
 
@@ -59,5 +61,19 @@ public class EndpointController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Endpoint not found");
         }
     }
+    
+    @PutMapping("/updateEndpointStatus/{id}")
+    public ResponseEntity<String> updateEndpointStatus(@PathVariable("id") int id, @RequestBody UpdateEndpointStatusRequest request) {
+        int status = request.getStatus();
+        boolean updated = endpointService.updateEndpointStatus(id, status);
+        if (updated) {
+            return ResponseEntity.status(HttpStatus.OK).body("Endpoint status updated successfully");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Endpoint not found or status could not be updated");
+        }
+    }
+    
+    
+
 
 }

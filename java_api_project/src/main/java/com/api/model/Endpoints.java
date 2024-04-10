@@ -1,19 +1,16 @@
 package com.api.model;
 
-public class Endpoint {
+public class Endpoints {
 
 	private int id;
 	private int status;
 	private String endpoint;
 
-	public Endpoint(String endpoint) {
-		this.endpoint = endpoint;
+	public Endpoints() {
+
 	}
 
-	public Endpoint() {
-	}
-
-	public Endpoint(int id, int status, String endpoint) {
+	public Endpoints(int id, int status, String endpoint) {
 		this.id = id;
 		this.status = status;
 		this.endpoint = endpoint;
